@@ -1129,6 +1129,12 @@
                                 <p class="help-block text-danger"></p>
                             </div>
                         </div>
+                                <div class="control-group">
+                            <div class="form-group controls">
+                                <asp:TextBox ID="txtcelular" runat="server" class="form-control" placeholder="Digite N° de celular" AutoCompleteType="Disabled" required data-validation-required-message="Ingrese." MaxLength="100"></asp:TextBox>
+                                <p class="help-block text-danger"></p>
+                            </div>
+                        </div>
                         <br />
                         <asp:UpdatePanel runat="server" ID="UpdatePanel" UpdateMode="Conditional">
                             <%--<Triggers>
