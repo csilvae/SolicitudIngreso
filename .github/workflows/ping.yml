@@ -1,0 +1,11 @@
+name: Verificar conexión con Server 2022
+
+on: [workflow_dispatch]
+
+jobs:
+  ping-server:
+    runs-on: self-hosted
+    steps:
+      - name: Verificar conectividad con Server 2022
+        run: |
+          ping -n 5 192.168.98.35
