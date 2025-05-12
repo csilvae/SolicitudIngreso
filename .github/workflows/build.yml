@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Build and analyze
-    runs-on: windows-latest
+    runs-on: self-hosted
 
     steps:
       - uses: actions/checkout@v4
@@ -23,12 +23,12 @@ jobs:
 
       - name: Install dotnet-sonarscanner
         run: dotnet tool install --global dotnet-sonarscanner
-
+ 
       - name: Add scanner to PATH
         run: echo "$HOME/.dotnet/tools" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
         shell: powershell
 
-      - name: Begin SonarQube analysis
+      - name: Begin SonarQube analysis        
         run: |
           dotnet-sonarscanner begin /k:"csilvae_SolicitudIngreso_da2e59d9-fd34-40a6-8457-83c4ebd5a73e" `
             /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" `
