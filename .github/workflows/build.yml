@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full clone for better SonarQube analysis
+          fetch-depth: 0
 
       - name: Set up JDK 17 (required by SonarScanner)
         uses: actions/setup-java@v4
@@ -21,32 +21,27 @@ jobs:
           java-version: 17
           distribution: 'zulu'
 
-      - name: Cache SonarQube packages
-        uses: actions/cache@v4
-        with:
-          path: ~\.sonar\cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+      - name: Install dotnet-sonarscanner
+        run: dotnet tool install --global dotnet-sonarscanner
 
-      - name: Download SonarScanner for MSBuild
-        shell: bash
-        run: |
-          curl -L -o scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-msbuild/sonar-scanner-msbuild-5.13.0.66756-net46.zip
-          unzip scanner.zip -d sonarscanner
-          rm scanner.zip
+      - name: Add scanner to PATH
+        run: echo "$HOME/.dotnet/tools" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+        shell: powershell
 
       - name: Begin SonarQube analysis
-        shell: powershell
         run: |
-          .\sonarscanner\SonarScanner.MSBuild.exe begin /k:"csilvae_SolicitudIngreso_da2e59d9-fd34-40a6-8457-83c4ebd5a73e" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          dotnet-sonarscanner begin /k:"csilvae_SolicitudIngreso_da2e59d9-fd34-40a6-8457-83c4ebd5a73e" `
+            /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" `
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+        shell: powershell
 
-      - name: Build solution using MSBuild
+      - name: Build with MSBuild
+        run: msbuild SolicitudIngreso.sln /t:Rebuild /p:Configuration=Release
         shell: powershell
-        run: |
-          msbuild SolicitudIngreso.sln /t:Rebuild /p:Configuration=Release
 
       - name: End SonarQube analysis
+        run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
         shell: powershell
-        run: |
-          .\sonarscanner\SonarScanner.MSBuild.exe end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+     
 
