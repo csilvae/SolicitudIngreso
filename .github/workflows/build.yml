@@ -1,4 +1,4 @@
-name: Build
+name: Build and Analyze with SonarQube
 
 on:
   push:
@@ -9,13 +9,13 @@ jobs:
   build:
     name: Build and analyze
     runs-on: windows-latest
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Full clone for better SonarQube analysis
 
-      - name: Set up JDK 17
+      - name: Set up JDK 17 (required by SonarScanner)
         uses: actions/setup-java@v4
         with:
           java-version: 17
@@ -29,16 +29,16 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: Download SonarScanner for MSBuild
-        shell: powershell
+        shell: bash
         run: |
-          Invoke-WebRequest -Uri "https://binaries.sonarsource.com/Distribution/sonar-scanner-msbuild/sonar-scanner-msbuild-5.13.0.66756-net46.zip" -OutFile "scanner.zip"
-          Expand-Archive -Path scanner.zip -DestinationPath "sonarscanner"
-          Remove-Item scanner.zip
+          curl -L -o scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-msbuild/sonar-scanner-msbuild-5.13.0.66756-net46.zip
+          unzip scanner.zip -d sonarscanner
+          rm scanner.zip
 
       - name: Begin SonarQube analysis
         shell: powershell
         run: |
-          .\sonarscanner\SonarScanner.MSBuild.exe begin /k:"csilvae_SolicitudIngreso_da2e59d9-fd34-40a6-8457-83c4ebd5a73e" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
+          .\sonarscanner\SonarScanner.MSBuild.exe begin /k:"csilvae_SolicitudIngreso_da2e59d9-fd34-40a6-8457-83c4ebd5a73e" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
       - name: Build solution using MSBuild
         shell: powershell
@@ -49,5 +49,4 @@ jobs:
         shell: powershell
         run: |
           .\sonarscanner\SonarScanner.MSBuild.exe end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-
 
