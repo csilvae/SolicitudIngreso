@@ -4,18 +4,28 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:  # permite ejecutar manualmente desde GitHub UI
 
 jobs:
+  ping-server:
+    name: Ping SonarQube server
+    runs-on: self-hosted
+    steps:
+      - name: Verificar conectividad con Server 2022
+        run: |
+          ping -n 5 192.168.98.35
+
   build:
     name: Build and analyze
-    runs-on: self-hosted
+    runs-on: windows-latest
+    needs: ping-server  # asegura que el ping corra primero
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 17 (required by SonarScanner)
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: 17
@@ -23,12 +33,12 @@ jobs:
 
       - name: Install dotnet-sonarscanner
         run: dotnet tool install --global dotnet-sonarscanner
- 
+
       - name: Add scanner to PATH
         run: echo "$HOME/.dotnet/tools" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
         shell: powershell
 
-      - name: Begin SonarQube analysis        
+      - name: Begin SonarQube analysis
         run: |
           dotnet-sonarscanner begin /k:"csilvae_SolicitudIngreso_da2e59d9-fd34-40a6-8457-83c4ebd5a73e" `
             /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" `
@@ -42,6 +52,5 @@ jobs:
       - name: End SonarQube analysis
         run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
         shell: powershell
-
      
 
